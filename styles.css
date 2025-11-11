@@ -96,6 +96,16 @@ nav a {
     line-height: 1.2;
 }
 
+.tour-note {
+    background: rgba(255, 179, 71, 0.12);
+    border-left: 3px solid var(--accent);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+}
+
 .hero-copy .tagline {
     letter-spacing: 0.3em;
     text-transform: uppercase;
@@ -155,6 +165,24 @@ nav a {
     border-radius: 20px;
     padding: 2rem;
     box-shadow: var(--shadow);
+}
+
+.team-groups {
+    display: grid;
+    gap: 1.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.team-group h3 {
+    margin: 0;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+}
+
+.team-group .player-list {
+    margin: 1rem 0 0;
 }
 
 .card-header h2 {
