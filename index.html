@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Tennis League</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="logo">Fantasy <span>Tennis</span></div>
+            <nav>
+                <ul>
+                    <li><a href="#how-it-works">How it Works</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#community">Community</a></li>
+                    <li><a href="#cta">Join</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <div class="hero-copy">
+                    <p class="tagline">Draft champions. Rally with friends. Dominate the tour.</p>
+                    <h1>Build your dream roster and conquer the fantasy court.</h1>
+                    <p class="description">
+                        Strategize each tournament, trade star players, and climb the global rankings in the ultimate
+                        fantasy tennis experience.
+                    </p>
+                    <div class="hero-actions">
+                        <a class="btn btn-primary" href="#cta">Create Your League</a>
+                        <a class="btn btn-secondary" href="#features">See the Features</a>
+                    </div>
+                </div>
+                <div class="hero-card">
+                    <div class="card-header">
+                        <h2>Upcoming Grand Slam</h2>
+                        <p>Roland Garros • Draft closes in 02d : 14h</p>
+                    </div>
+                    <ul class="player-list">
+                        <li>
+                            <span class="seed">#1</span>
+                            <span class="name">I. Swiatek</span>
+                            <span class="points">+120 pts</span>
+                        </li>
+                        <li>
+                            <span class="seed">#3</span>
+                            <span class="name">J. Sinner</span>
+                            <span class="points">+95 pts</span>
+                        </li>
+                        <li>
+                            <span class="seed">#7</span>
+                            <span class="name">A. Sabalenka</span>
+                            <span class="points">+88 pts</span>
+                        </li>
+                        <li>
+                            <span class="seed">#12</span>
+                            <span class="name">B. Shelton</span>
+                            <span class="points">+60 pts</span>
+                        </li>
+                    </ul>
+                    <a class="btn btn-card" href="#cta">Draft now</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="split-section">
+            <div class="container">
+                <div class="split-text">
+                    <h2>Play every tournament like a pro manager</h2>
+                    <p>
+                        Sign up in minutes, assemble your roster, and compete against friends or the global community
+                        across every major tournament. Player performance translates directly into fantasy points so
+                        every match matters.
+                    </p>
+                </div>
+                <div class="split-cards">
+                    <article class="info-card">
+                        <h3>Draft &amp; Trade</h3>
+                        <p>Hold a live draft, scout player stats, and make mid-season trades to keep your lineup hot.</p>
+                    </article>
+                    <article class="info-card">
+                        <h3>Score Smart</h3>
+                        <p>Earn points for aces, break points saved, match wins, and title runs throughout the season.</p>
+                    </article>
+                    <article class="info-card">
+                        <h3>Win Prizes</h3>
+                        <p>Top managers secure exclusive gear drops, VIP event passes, and year-end trophies.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="container">
+                <h2>Why fantasy tennis fans love us</h2>
+                <div class="feature-grid">
+                    <article class="feature-item">
+                        <h3>Real-time insights</h3>
+                        <p>Live dashboards with stats, injury alerts, and predictive analytics to guide every pick.</p>
+                    </article>
+                    <article class="feature-item">
+                        <h3>Custom leagues</h3>
+                        <p>Private leagues for your club or public ladders to challenge new rivals from around the globe.</p>
+                    </article>
+                    <article class="feature-item">
+                        <h3>Mobile ready</h3>
+                        <p>Stay on top of the action with our responsive web app and dedicated mobile notifications.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="community" class="community">
+            <div class="container">
+                <div class="quote">
+                    <p>
+                        “Fantasy Tennis League keeps every rally exhilarating. Draft nights are a blast and the live
+                        scoring adds drama to every point.”
+                    </p>
+                    <span class="quote-author">— Amara N., 2023 Champion</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="cta" class="cta">
+            <div class="container">
+                <h2>Serve up your season</h2>
+                <p>Join thousands of managers who are elevating match day with strategy, stats, and friendly rivalries.</p>
+                <form class="signup-form">
+                    <input type="email" placeholder="Enter your email" aria-label="Email" required>
+                    <button type="submit" class="btn btn-primary">Join the waitlist</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; <span id="year"></span> Fantasy Tennis League. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+                <a href="#">Support</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
