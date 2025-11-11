@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upcoming Tournaments | Fantasy Tennis League</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="tournaments-page">
+    <header class="site-header">
+        <div class="container">
+            <div class="logo">Fantasy <span>Tennis</span></div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="#grand-slams">Grand Slams</a></li>
+                    <li><a href="#atp-tour">ATP Tour</a></li>
+                    <li><a href="#wta-tour">WTA Tour</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="tournaments-main">
+        <section class="page-hero">
+            <div class="container">
+                <h1>Upcoming Tournaments</h1>
+                <p>Plan your roster around the next big events on the professional tennis calendar.</p>
+            </div>
+        </section>
+
+        <section id="grand-slams" class="tournament-section">
+            <div class="container">
+                <h2>Grand Slams</h2>
+                <div class="tournament-grid">
+                    <article class="tournament-card">
+                        <h3>Roland Garros</h3>
+                        <p class="tournament-date">May 26 - Jun 9, 2024</p>
+                        <p>Clay courts in Paris bring grueling rallies and opportunities for clay specialists to shine.</p>
+                    </article>
+                    <article class="tournament-card">
+                        <h3>Wimbledon</h3>
+                        <p class="tournament-date">Jul 1 - Jul 14, 2024</p>
+                        <p>The grass-court classic demands precision and quick reflexes from every player on the draw.</p>
+                    </article>
+                    <article class="tournament-card">
+                        <h3>US Open</h3>
+                        <p class="tournament-date">Aug 26 - Sep 8, 2024</p>
+                        <p>Fast hard courts in New York reward aggressive baseliners and clutch night-session performers.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="atp-tour" class="tournament-section">
+            <div class="container">
+                <h2>ATP Tour Highlights</h2>
+                <div class="tournament-grid">
+                    <article class="tournament-card">
+                        <h3>Monte-Carlo Masters</h3>
+                        <p class="tournament-date">Apr 7 - Apr 14, 2024</p>
+                        <p>Scenic clay battles with big points on the line for contenders chasing the No.1 ranking.</p>
+                    </article>
+                    <article class="tournament-card">
+                        <h3>Queen's Club Championships</h3>
+                        <p class="tournament-date">Jun 17 - Jun 23, 2024</p>
+                        <p>The perfect grass-court warm up, featuring top seeds looking to fine-tune their serve-and-volley game.</p>
+                    </article>
+                    <article class="tournament-card">
+                        <h3>ATP Finals</h3>
+                        <p class="tournament-date">Nov 10 - Nov 17, 2024</p>
+                        <p>The season-ending showdown for the top eight players battling for the year-end crown.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="wta-tour" class="tournament-section">
+            <div class="container">
+                <h2>WTA Tour Highlights</h2>
+                <div class="tournament-grid">
+                    <article class="tournament-card">
+                        <h3>Madrid Open</h3>
+                        <p class="tournament-date">Apr 23 - May 5, 2024</p>
+                        <p>High-altitude clay encourages aggressive play and produces unique matchups.</p>
+                    </article>
+                    <article class="tournament-card">
+                        <h3>Western &amp; Southern Open</h3>
+                        <p class="tournament-date">Aug 12 - Aug 19, 2024</p>
+                        <p>Elite hard-court field just before the US Open with major ranking implications.</p>
+                    </article>
+                    <article class="tournament-card">
+                        <h3>WTA Finals</h3>
+                        <p class="tournament-date">Nov 3 - Nov 9, 2024</p>
+                        <p>The top eight women battle it out in a round-robin format for the season's final trophy.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; <span id="year"></span> Fantasy Tennis League. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+                <a href="#">Support</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
