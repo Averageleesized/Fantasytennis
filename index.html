@@ -46,65 +46,13 @@
                         <p>Balanced WTA &amp; ATP roster for the Paris Slam</p>
                     </div>
                     <div class="team-groups">
-                        <div class="team-group">
+                        <div class="team-group" data-tour="WTA">
                             <h3>Women&apos;s Picks</h3>
-                            <ul class="player-list">
-                                <li>
-                                    <span class="seed">#1</span>
-                                    <span class="name">I. Swiatek</span>
-                                    <span class="points">+120 pts</span>
-                                </li>
-                                <li>
-                                    <span class="seed">#2</span>
-                                    <span class="name">A. Sabalenka</span>
-                                    <span class="points">+105 pts</span>
-                                </li>
-                                <li>
-                                    <span class="seed">#3</span>
-                                    <span class="name">C. Gauff</span>
-                                    <span class="points">+92 pts</span>
-                                </li>
-                                <li>
-                                    <span class="seed">#4</span>
-                                    <span class="name">E. Rybakina</span>
-                                    <span class="points">+88 pts</span>
-                                </li>
-                                <li>
-                                    <span class="seed">#5</span>
-                                    <span class="name">Q. Zheng</span>
-                                    <span class="points">+76 pts</span>
-                                </li>
-                            </ul>
+                            <ul class="player-list" id="wta-spotlight" data-tour="WTA"></ul>
                         </div>
-                        <div class="team-group">
+                        <div class="team-group" data-tour="ATP">
                             <h3>Men&apos;s Picks</h3>
-                            <ul class="player-list">
-                                <li>
-                                    <span class="seed">#1</span>
-                                    <span class="name">J. Sinner</span>
-                                    <span class="points">+110 pts</span>
-                                </li>
-                                <li>
-                                    <span class="seed">#2</span>
-                                    <span class="name">C. Alcaraz</span>
-                                    <span class="points">+102 pts</span>
-                                </li>
-                                <li>
-                                    <span class="seed">#3</span>
-                                    <span class="name">N. Djokovic</span>
-                                    <span class="points">+98 pts</span>
-                                </li>
-                                <li>
-                                    <span class="seed">#4</span>
-                                    <span class="name">A. Zverev</span>
-                                    <span class="points">+84 pts</span>
-                                </li>
-                                <li>
-                                    <span class="seed">#9</span>
-                                    <span class="name">B. Shelton</span>
-                                    <span class="points">+68 pts</span>
-                                </li>
-                            </ul>
+                            <ul class="player-list" id="atp-spotlight" data-tour="ATP"></ul>
                         </div>
                     </div>
                     <a class="btn btn-card" href="#cta">Draft now</a>
@@ -195,7 +143,63 @@
     </footer>
 
     <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
+        const yearElement = document.getElementById('year');
+        if (yearElement) {
+            yearElement.textContent = new Date().getFullYear();
+        }
+
+        const spotlightLists = document.querySelectorAll('.player-list[data-tour]');
+
+        function buildPlayerEntries(tourData, tourKey) {
+            if (!tourData) {
+                return [];
+            }
+
+            return Object.entries(tourData).flatMap(([playerId, rankings]) =>
+                Object.entries(rankings).map(([rankingKey, player]) => ({
+                    ...player,
+                    id: playerId,
+                    tour: player.tour || tourKey,
+                    ranking: typeof player.ranking === 'number' ? player.ranking : Number(rankingKey)
+                }))
+            );
+        }
+
+        function createPlayerListItem(player) {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <span class="seed">#${player.ranking}</span>
+                <span class="name">${player.name}</span>
+                <span class="points">+${player.points} pts</span>
+            `;
+            return listItem;
+        }
+
+        fetch('data/players.json')
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Failed to load player data: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then((data) => {
+                spotlightLists.forEach((list) => {
+                    const tourKey = list.dataset.tour;
+                    const playerEntries = buildPlayerEntries(data[tourKey], tourKey)
+                        .filter((player) => player.tour === tourKey)
+                        .sort((a, b) => a.ranking - b.ranking);
+
+                    list.replaceChildren();
+
+                    playerEntries.forEach((player) => {
+                        const listItem = createPlayerListItem(player);
+                        list.appendChild(listItem);
+                    });
+                });
+            })
+            .catch((error) => {
+                console.error(error);
+            });
     </script>
 </body>
 </html>

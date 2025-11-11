@@ -1,0 +1,96 @@
+{
+  "WTA": {
+    "iga-swiatek": {
+      "1": {
+        "id": "iga-swiatek",
+        "tour": "WTA",
+        "ranking": 1,
+        "name": "I. Swiatek",
+        "points": 120
+      }
+    },
+    "aryna-sabalenka": {
+      "2": {
+        "id": "aryna-sabalenka",
+        "tour": "WTA",
+        "ranking": 2,
+        "name": "A. Sabalenka",
+        "points": 105
+      }
+    },
+    "coco-gauff": {
+      "3": {
+        "id": "coco-gauff",
+        "tour": "WTA",
+        "ranking": 3,
+        "name": "C. Gauff",
+        "points": 92
+      }
+    },
+    "elena-rybakina": {
+      "4": {
+        "id": "elena-rybakina",
+        "tour": "WTA",
+        "ranking": 4,
+        "name": "E. Rybakina",
+        "points": 88
+      }
+    },
+    "qinwen-zheng": {
+      "5": {
+        "id": "qinwen-zheng",
+        "tour": "WTA",
+        "ranking": 5,
+        "name": "Q. Zheng",
+        "points": 76
+      }
+    }
+  },
+  "ATP": {
+    "jannik-sinner": {
+      "1": {
+        "id": "jannik-sinner",
+        "tour": "ATP",
+        "ranking": 1,
+        "name": "J. Sinner",
+        "points": 110
+      }
+    },
+    "carlos-alcaraz": {
+      "2": {
+        "id": "carlos-alcaraz",
+        "tour": "ATP",
+        "ranking": 2,
+        "name": "C. Alcaraz",
+        "points": 102
+      }
+    },
+    "novak-djokovic": {
+      "3": {
+        "id": "novak-djokovic",
+        "tour": "ATP",
+        "ranking": 3,
+        "name": "N. Djokovic",
+        "points": 98
+      }
+    },
+    "alexander-zverev": {
+      "4": {
+        "id": "alexander-zverev",
+        "tour": "ATP",
+        "ranking": 4,
+        "name": "A. Zverev",
+        "points": 84
+      }
+    },
+    "ben-shelton": {
+      "9": {
+        "id": "ben-shelton",
+        "tour": "ATP",
+        "ranking": 9,
+        "name": "B. Shelton",
+        "points": 68
+      }
+    }
+  }
+}
