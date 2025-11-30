@@ -21,6 +21,11 @@ API_KEY = os.getenv(
     "API_TENNIS_KEY",
     "db53a535d63fe359cdaa1488d15f3e55e12835c85590c4e3eace0dcc43edb4ab",
 )
+import requests
+
+
+API_BASE_URL = os.getenv("API_TENNIS_BASE_URL", "https://api-tennis.example.com")
+API_KEY = os.getenv("API_TENNIS_KEY")
 API_KEY_HEADER = os.getenv("API_TENNIS_KEY_HEADER", "x-api-key")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_SERVICE_KEY")
@@ -55,6 +60,12 @@ def fetch_api(endpoint: str, *, params: Optional[Dict[str, Any]] = None) -> Dict
 
     try:
         return json.loads(payload)
+    url = f"{API_BASE_URL.rstrip('/')}/{endpoint.lstrip('/')}"
+    headers = {API_KEY_HEADER: api_key}
+    response = requests.get(url, headers=headers, params=params, timeout=30)
+    response.raise_for_status()
+    try:
+        return response.json()
     except ValueError as exc:  # pragma: no cover - defensive
         raise IngestionError(f"Invalid JSON payload from {url}") from exc
 
@@ -72,6 +83,7 @@ def supabase_request(
     base_url = f"{supabase_url.rstrip('/')}/rest/v1/{path}"
     query = f"?{parse.urlencode(params)}" if params else ""
     url = base_url + query
+    url = f"{supabase_url.rstrip('/')}/rest/v1/{path}"
     headers = {
         "apikey": supabase_key,
         "Authorization": f"Bearer {supabase_key}",
@@ -92,6 +104,12 @@ def supabase_request(
         raise IngestionError(f"Supabase request failed ({exc.code}): {detail}") from exc
     except error.URLError as exc:
         raise IngestionError(f"Supabase request failed: {exc.reason}") from exc
+    response = requests.request(method, url, headers=headers, params=params, json=json_body, timeout=30)
+    if not response.ok:
+        raise IngestionError(f"Supabase request failed ({response.status_code}): {response.text}")
+    if response.text:
+        return response.json()
+    return None
 
 
 def fetch_lookup_table(table: str, key: str) -> Dict[str, Any]:
@@ -127,6 +145,9 @@ def normalize_date(value: Optional[Any]) -> Optional[str]:
             return dt.date.fromtimestamp(value).isoformat()
         except (OverflowError, OSError, ValueError):
             return None
+def normalize_date(value: Optional[str]) -> Optional[str]:
+    if not value:
+        return None
     for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y", "%Y-%m-%dT%H:%M:%SZ"):
         try:
             return dt.datetime.strptime(value, fmt).date().isoformat()
@@ -389,6 +410,8 @@ def main() -> None:
         events = list_future_events()
         print(json.dumps(events, indent=2))
         return
+
+    args = parser.parse_args()
 
     summary = run_ingestion()
     if args.print_summary:

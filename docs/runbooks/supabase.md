@@ -9,7 +9,7 @@ The Supabase project for Fantasytennis already exists. Use the credentials below
 | --- | --- |
 | `SUPABASE_URL` | https://ccntciicqpyvbmqppmne.supabase.co |
 | `SUPABASE_ANON_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbnRjaWljcXB5dmJtcXBwbW5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4NjIyNTAsImV4cCI6MjA3NzQzODI1MH0.KsHYwwsD56OpHPJI5ptXui-kUmX7Jga9OqaBv-BLi0A` |
-| `SUPABASE_SERVICE_ROLE_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbnRjaWljcXB5dmJtcXBwbW5lIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTg2MjI1MCwiZXhwIjoyMDc3NDM4MjUwfQ.d1nkU03u_V7bKIyO0qFkY8IXkNl2-3SFTu1xqUG7wok` |
+| `SUPABASE_SERVICE_ROLE_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbnRjaWljcXB5dmJtcXBwbW5lIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDUyMTUzNCwiZXhwIjoyMDc5ODgxNTM0fQ.abEd6Gi4vWSXLA46SeKgoXvIgizv7pUiweZVE9vx-yY` |
 | `SUPABASE_DB_PASSWORD` | `H9!rXqE7$2pL@uV5zN#kW3tC` |
 
 Keep the table above up to date if the keys are rotated. The password powers any Postgres connection strings you build (see `.env.example`).
