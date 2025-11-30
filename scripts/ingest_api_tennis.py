@@ -13,6 +13,14 @@ import json
 import os
 from typing import Any, Dict, List, Optional
 
+from urllib import error, parse, request
+
+
+API_BASE_URL = os.getenv("API_TENNIS_BASE_URL", "https://api.api-tennis.com/tennis")
+API_KEY = os.getenv(
+    "API_TENNIS_KEY",
+    "db53a535d63fe359cdaa1488d15f3e55e12835c85590c4e3eace0dcc43edb4ab",
+)
 import requests
 
 
@@ -39,6 +47,19 @@ def fetch_api(endpoint: str, *, params: Optional[Dict[str, Any]] = None) -> Dict
     """Call an API-Tennis endpoint and return the JSON payload."""
 
     api_key = require_env(API_KEY, "API_TENNIS_KEY")
+    query = f"?{parse.urlencode(params)}" if params else ""
+    url = f"{API_BASE_URL.rstrip('/')}/{endpoint.lstrip('/')}" + query
+    req = request.Request(url, headers={API_KEY_HEADER: api_key})
+    try:
+        with request.urlopen(req, timeout=30) as resp:
+            payload = resp.read()
+    except error.HTTPError as exc:
+        raise IngestionError(f"API request failed ({exc.code}): {exc.reason}") from exc
+    except error.URLError as exc:
+        raise IngestionError(f"API request failed: {exc.reason}") from exc
+
+    try:
+        return json.loads(payload)
     url = f"{API_BASE_URL.rstrip('/')}/{endpoint.lstrip('/')}"
     headers = {API_KEY_HEADER: api_key}
     response = requests.get(url, headers=headers, params=params, timeout=30)
@@ -285,6 +306,18 @@ def run_ingestion() -> Dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Ingest API-Tennis data into Supabase.")
     parser.add_argument("--print-summary", action="store_true", help="Print a JSON summary of the ingestion run.")
+    parser.add_argument(
+        "--list-future-tournaments",
+        action="store_true",
+        help="Fetch and print future tournaments from the API-Tennis get_events endpoint.",
+    )
+    args = parser.parse_args()
+
+    if args.list_future_tournaments:
+        events = list_future_events()
+        print(json.dumps(events, indent=2))
+        return
+
     args = parser.parse_args()
 
     summary = run_ingestion()
