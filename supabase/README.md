@@ -22,3 +22,28 @@ supabase link --project-ref ccntciicqpyvbmqppmne --use-ssl
 ```
 
 Once linked, you can run `supabase db diff --linked`, `supabase db push`, and `supabase db seed` as usual.
+
+## API-Tennis ingestion
+
+The ingestion script pulls players, tournaments, and rankings from the API-Tennis
+service and upserts them into the `ingest_sources`, `ingest_players`,
+`ingest_tournaments`, and `ingest_rankings` tables using the existing unique
+constraints.
+
+Required environment variables:
+
+- `API_TENNIS_KEY`: API key used to authenticate with the API-Tennis service.
+- `API_TENNIS_BASE_URL` (optional): Base URL for the API-Tennis endpoints. Defaults to `https://api-tennis.example.com`.
+- `API_TENNIS_KEY_HEADER` (optional): HTTP header name for the API key. Defaults to `x-api-key`.
+- `SUPABASE_URL`: Your project's Supabase REST URL.
+- `SUPABASE_SERVICE_ROLE_KEY`: Service role key used to perform upserts via Supabase REST.
+
+The script requires only Python 3 (it uses the standard library HTTP client).
+Run the ingestion script with:
+
+```bash
+python scripts/ingest_api_tennis.py --print-summary
+```
+
+The `--print-summary` flag outputs a JSON summary of the ingestion run, including
+the source identifier and how many players were ingested.
