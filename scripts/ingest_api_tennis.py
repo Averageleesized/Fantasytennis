@@ -13,7 +13,7 @@ import json
 import os
 from typing import Any, Dict, List, Optional
 
-from urllib import error, parse, request
+import requests
 
 
 API_BASE_URL = os.getenv("API_TENNIS_BASE_URL", "https://api-tennis.example.com")
@@ -39,19 +39,12 @@ def fetch_api(endpoint: str, *, params: Optional[Dict[str, Any]] = None) -> Dict
     """Call an API-Tennis endpoint and return the JSON payload."""
 
     api_key = require_env(API_KEY, "API_TENNIS_KEY")
-    query = f"?{parse.urlencode(params)}" if params else ""
-    url = f"{API_BASE_URL.rstrip('/')}/{endpoint.lstrip('/')}" + query
-    req = request.Request(url, headers={API_KEY_HEADER: api_key})
+    url = f"{API_BASE_URL.rstrip('/')}/{endpoint.lstrip('/')}"
+    headers = {API_KEY_HEADER: api_key}
+    response = requests.get(url, headers=headers, params=params, timeout=30)
+    response.raise_for_status()
     try:
-        with request.urlopen(req, timeout=30) as resp:
-            payload = resp.read()
-    except error.HTTPError as exc:
-        raise IngestionError(f"API request failed ({exc.code}): {exc.reason}") from exc
-    except error.URLError as exc:
-        raise IngestionError(f"API request failed: {exc.reason}") from exc
-
-    try:
-        return json.loads(payload)
+        return response.json()
     except ValueError as exc:  # pragma: no cover - defensive
         raise IngestionError(f"Invalid JSON payload from {url}") from exc
 
@@ -66,29 +59,19 @@ def supabase_request(
     supabase_url = require_env(SUPABASE_URL, "SUPABASE_URL")
     supabase_key = require_env(SUPABASE_SERVICE_ROLE_KEY, "SUPABASE_SERVICE_ROLE_KEY")
 
-    base_url = f"{supabase_url.rstrip('/')}/rest/v1/{path}"
-    query = f"?{parse.urlencode(params)}" if params else ""
-    url = base_url + query
+    url = f"{supabase_url.rstrip('/')}/rest/v1/{path}"
     headers = {
         "apikey": supabase_key,
         "Authorization": f"Bearer {supabase_key}",
         "Content-Type": "application/json",
         "Accept": "application/json",
     }
-    data = json.dumps(json_body).encode("utf-8") if json_body is not None else None
-
-    req = request.Request(url, data=data, headers=headers, method=method)
-    try:
-        with request.urlopen(req, timeout=30) as resp:
-            payload = resp.read()
-            if payload:
-                return json.loads(payload)
-            return None
-    except error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="ignore")
-        raise IngestionError(f"Supabase request failed ({exc.code}): {detail}") from exc
-    except error.URLError as exc:
-        raise IngestionError(f"Supabase request failed: {exc.reason}") from exc
+    response = requests.request(method, url, headers=headers, params=params, json=json_body, timeout=30)
+    if not response.ok:
+        raise IngestionError(f"Supabase request failed ({response.status_code}): {response.text}")
+    if response.text:
+        return response.json()
+    return None
 
 
 def fetch_lookup_table(table: str, key: str) -> Dict[str, Any]:

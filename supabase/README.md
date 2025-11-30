@@ -39,6 +39,7 @@ Required environment variables:
 - `SUPABASE_SERVICE_ROLE_KEY`: Service role key used to perform upserts via Supabase REST.
 
 The script requires only Python 3 (it uses the standard library HTTP client).
+The script requires Python 3 and the `requests` package (`pip install requests`).
 Run the ingestion script with:
 
 ```bash
