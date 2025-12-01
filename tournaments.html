@@ -16,9 +16,7 @@
             <nav>
                 <ul>
                     <li><a href="index.html">Home</a></li>
-                    <li><a href="#grand-slams">Grand Slams</a></li>
-                    <li><a href="#atp-tour">ATP Tour</a></li>
-                    <li><a href="#wta-tour">WTA Tour</a></li>
+                    <li><a href="#upcoming">Upcoming</a></li>
                 </ul>
             </nav>
         </div>
@@ -32,72 +30,20 @@
             </div>
         </section>
 
-        <section id="grand-slams" class="tournament-section">
+        <section id="upcoming" class="tournament-section">
             <div class="container">
-                <h2>Grand Slams</h2>
-                <div class="tournament-grid">
-                    <article class="tournament-card">
-                        <h3>Roland Garros</h3>
-                        <p class="tournament-date">May 26 - Jun 9, 2024</p>
-                        <p>Clay courts in Paris bring grueling rallies and opportunities for clay specialists to shine.</p>
-                    </article>
-                    <article class="tournament-card">
-                        <h3>Wimbledon</h3>
-                        <p class="tournament-date">Jul 1 - Jul 14, 2024</p>
-                        <p>The grass-court classic demands precision and quick reflexes from every player on the draw.</p>
-                    </article>
-                    <article class="tournament-card">
-                        <h3>US Open</h3>
-                        <p class="tournament-date">Aug 26 - Sep 8, 2024</p>
-                        <p>Fast hard courts in New York reward aggressive baseliners and clutch night-session performers.</p>
-                    </article>
+                <div class="section-header">
+                    <div>
+                        <p class="eyebrow">Live from API-Tennis</p>
+                        <h2>Upcoming tournaments</h2>
+                        <p class="section-lede">Fresh data straight from API-Tennis. Dates, locations, and surfaces update automatically as the schedule changes.</p>
+                    </div>
+                    <div class="section-meta" aria-live="polite" data-tournament-meta>
+                        <p class="status" data-tournament-status>Loading tournaments…</p>
+                        <p class="muted small" data-last-updated></p>
+                    </div>
                 </div>
-            </div>
-        </section>
-
-        <section id="atp-tour" class="tournament-section">
-            <div class="container">
-                <h2>ATP Tour Highlights</h2>
-                <div class="tournament-grid">
-                    <article class="tournament-card">
-                        <h3>Monte-Carlo Masters</h3>
-                        <p class="tournament-date">Apr 7 - Apr 14, 2024</p>
-                        <p>Scenic clay battles with big points on the line for contenders chasing the No.1 ranking.</p>
-                    </article>
-                    <article class="tournament-card">
-                        <h3>Queen's Club Championships</h3>
-                        <p class="tournament-date">Jun 17 - Jun 23, 2024</p>
-                        <p>The perfect grass-court warm up, featuring top seeds looking to fine-tune their serve-and-volley game.</p>
-                    </article>
-                    <article class="tournament-card">
-                        <h3>ATP Finals</h3>
-                        <p class="tournament-date">Nov 10 - Nov 17, 2024</p>
-                        <p>The season-ending showdown for the top eight players battling for the year-end crown.</p>
-                    </article>
-                </div>
-            </div>
-        </section>
-
-        <section id="wta-tour" class="tournament-section">
-            <div class="container">
-                <h2>WTA Tour Highlights</h2>
-                <div class="tournament-grid">
-                    <article class="tournament-card">
-                        <h3>Madrid Open</h3>
-                        <p class="tournament-date">Apr 23 - May 5, 2024</p>
-                        <p>High-altitude clay encourages aggressive play and produces unique matchups.</p>
-                    </article>
-                    <article class="tournament-card">
-                        <h3>Western &amp; Southern Open</h3>
-                        <p class="tournament-date">Aug 12 - Aug 19, 2024</p>
-                        <p>Elite hard-court field just before the US Open with major ranking implications.</p>
-                    </article>
-                    <article class="tournament-card">
-                        <h3>WTA Finals</h3>
-                        <p class="tournament-date">Nov 3 - Nov 9, 2024</p>
-                        <p>The top eight women battle it out in a round-robin format for the season's final trophy.</p>
-                    </article>
-                </div>
+                <div class="tournament-grid" data-tournament-grid aria-live="polite" aria-busy="true"></div>
             </div>
         </section>
     </main>
@@ -114,7 +60,141 @@
     </footer>
 
     <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
+        const API_KEY = 'db53a535d63fe359cdaa1488d15f3e55e12835c85590c4e3eace0dcc43edb4ab';
+        const API_BASE_URL = 'https://api.api-tennis.com/tennis';
+
+        const yearEl = document.getElementById('year');
+        const gridEl = document.querySelector('[data-tournament-grid]');
+        const statusEl = document.querySelector('[data-tournament-status]');
+        const updatedEl = document.querySelector('[data-last-updated]');
+
+        const formatDate = (date) =>
+            new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+
+        const normalizeDate = (value) => {
+            if (!value && value !== 0) return null;
+            if (typeof value === 'number') {
+                return new Date(value * (value < 2_000_000_000 ? 1000 : 1));
+            }
+            const str = String(value).trim();
+            if (!str) return null;
+
+            const maybeIso = str.length > 10 ? str.split('T')[0] : str;
+            const parsed = new Date(maybeIso);
+            if (!Number.isNaN(parsed.getTime())) return parsed;
+
+            const [d, m, y] = maybeIso.split(/[-/]/);
+            if (d && m && y) {
+                const fallback = new Date(Number(y), Number(m) - 1, Number(d));
+                if (!Number.isNaN(fallback.getTime())) return fallback;
+            }
+            return null;
+        };
+
+        const pickFirst = (event, keys) => {
+            for (const key of keys) {
+                if (event[key] !== undefined && event[key] !== null && String(event[key]).trim() !== '') {
+                    return event[key];
+                }
+            }
+            return null;
+        };
+
+        const normalizeEvent = (event) => {
+            const startRaw = pickFirst(event, ['start_date', 'startdate', 'start', 'date', 'event_date', 'date_start', 'begin_at', 'day', 'timestamp']);
+            const endRaw = pickFirst(event, ['end_date', 'enddate', 'end', 'finish_at', 'date_end']);
+            const startDate = normalizeDate(startRaw);
+            const endDate = normalizeDate(endRaw);
+            if (!startDate) return null;
+
+            const id = pickFirst(event, ['event_id', 'id', 'tournament_id']);
+            const name = pickFirst(event, ['name', 'event', 'tournament', 'title', 'tournament_name']);
+            const surface = pickFirst(event, ['surface']);
+            const tour = pickFirst(event, ['category', 'league', 'tour']);
+            const locationParts = [event.city, event.country, event.location, event.venue].filter(Boolean);
+
+            return {
+                id: id ? String(id) : `${name || 'unknown'}-${startDate.getTime()}`,
+                name: name || 'Unnamed event',
+                surface: surface ? String(surface) : null,
+                tour: tour ? String(tour) : null,
+                startDate,
+                endDate,
+                location: locationParts.length ? locationParts.join(', ') : null,
+            };
+        };
+
+        const formatDateRange = (startDate, endDate) => {
+            if (!endDate || Number.isNaN(endDate.getTime())) {
+                return formatDate(startDate);
+            }
+            const sameMonth = startDate.getMonth() === endDate.getMonth() && startDate.getFullYear() === endDate.getFullYear();
+            if (sameMonth) {
+                return `${startDate.toLocaleString('en', { month: 'short' })} ${startDate.getDate()}–${endDate.getDate()}, ${startDate.getFullYear()}`;
+            }
+            return `${formatDate(startDate)} – ${formatDate(endDate)}`;
+        };
+
+        const renderTournaments = (events) => {
+            gridEl.setAttribute('aria-busy', 'false');
+            gridEl.innerHTML = '';
+            if (!events.length) {
+                gridEl.innerHTML = '<p class="status muted">No upcoming tournaments found.</p>';
+                return;
+            }
+
+            for (const event of events) {
+                const card = document.createElement('article');
+                card.className = 'tournament-card';
+                const badges = [];
+                if (event.tour) badges.push(`<span class="badge">${event.tour}</span>`);
+                if (event.surface) badges.push(`<span class="badge surface">${event.surface}</span>`);
+
+                card.innerHTML = `
+                    <div class="card-top">${badges.join('')}</div>
+                    <h3>${event.name}</h3>
+                    <p class="tournament-date">${formatDateRange(event.startDate, event.endDate)}</p>
+                    ${event.location ? `<p class="muted">${event.location}</p>` : ''}
+                `;
+                gridEl.appendChild(card);
+            }
+        };
+
+        const fetchTournaments = async () => {
+            const today = new Date();
+            const url = `${API_BASE_URL}/?${new URLSearchParams({ method: 'get_events', APIkey: API_KEY, from_date: today.toISOString().slice(0, 10) }).toString()}`;
+            statusEl.textContent = 'Loading tournaments…';
+            gridEl.setAttribute('aria-busy', 'true');
+
+            try {
+                const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                if (!response.ok) throw new Error(`API request failed (${response.status})`);
+                const payload = await response.json();
+                const events = payload.result || payload.events || payload.response || payload.results || [];
+
+                const upcoming = events
+                    .map(normalizeEvent)
+                    .filter(Boolean)
+                    .filter((event) => event.startDate >= new Date(today.toDateString()))
+                    .sort((a, b) => a.startDate - b.startDate)
+                    .slice(0, 24);
+
+                renderTournaments(upcoming);
+                statusEl.textContent = `${upcoming.length} upcoming tournament${upcoming.length === 1 ? '' : 's'} ready to draft around.`;
+                updatedEl.textContent = `Updated ${new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(new Date())}`;
+            } catch (error) {
+                console.error(error);
+                statusEl.textContent = 'Unable to load tournaments right now.';
+                const message = document.createElement('p');
+                message.className = 'status muted';
+                message.textContent = 'Check your network connection or API key and try again.';
+                gridEl.innerHTML = '';
+                gridEl.appendChild(message);
+            }
+        };
+
+        yearEl.textContent = new Date().getFullYear();
+        fetchTournaments();
     </script>
 </body>
 </html>

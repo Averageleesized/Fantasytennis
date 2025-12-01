@@ -80,6 +80,9 @@ def supabase_request(
     supabase_url = require_env(SUPABASE_URL, "SUPABASE_URL")
     supabase_key = require_env(SUPABASE_SERVICE_ROLE_KEY, "SUPABASE_SERVICE_ROLE_KEY")
 
+    base_url = f"{supabase_url.rstrip('/')}/rest/v1/{path}"
+    query = f"?{parse.urlencode(params)}" if params else ""
+    url = base_url + query
     url = f"{supabase_url.rstrip('/')}/rest/v1/{path}"
     headers = {
         "apikey": supabase_key,
@@ -87,6 +90,20 @@ def supabase_request(
         "Content-Type": "application/json",
         "Accept": "application/json",
     }
+    data = json.dumps(json_body).encode("utf-8") if json_body is not None else None
+
+    req = request.Request(url, data=data, headers=headers, method=method)
+    try:
+        with request.urlopen(req, timeout=30) as resp:
+            payload = resp.read()
+            if payload:
+                return json.loads(payload)
+            return None
+    except error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="ignore")
+        raise IngestionError(f"Supabase request failed ({exc.code}): {detail}") from exc
+    except error.URLError as exc:
+        raise IngestionError(f"Supabase request failed: {exc.reason}") from exc
     response = requests.request(method, url, headers=headers, params=params, json=json_body, timeout=30)
     if not response.ok:
         raise IngestionError(f"Supabase request failed ({response.status_code}): {response.text}")
@@ -120,6 +137,14 @@ def normalize_country_code(country: Optional[str]) -> Optional[str]:
     return code
 
 
+def normalize_date(value: Optional[Any]) -> Optional[str]:
+    if not value:
+        return None
+    if isinstance(value, (int, float)):
+        try:
+            return dt.date.fromtimestamp(value).isoformat()
+        except (OverflowError, OSError, ValueError):
+            return None
 def normalize_date(value: Optional[str]) -> Optional[str]:
     if not value:
         return None
@@ -128,6 +153,10 @@ def normalize_date(value: Optional[str]) -> Optional[str]:
             return dt.datetime.strptime(value, fmt).date().isoformat()
         except ValueError:
             continue
+    try:
+        return dt.datetime.fromisoformat(str(value)).date().isoformat()
+    except ValueError:
+        return None
     return None
 
 
@@ -148,6 +177,70 @@ def normalize_surface_slug(surface: Optional[str]) -> Optional[str]:
     if surface_slug in {"hard", "clay", "grass", "carpet"}:
         return surface_slug
     return None
+
+
+def normalize_event_start_date(event: Dict[str, Any]) -> Optional[str]:
+    candidates = [
+        event.get("start_date"),
+        event.get("startdate"),
+        event.get("start"),
+        event.get("date"),
+        event.get("event_date"),
+        event.get("date_start"),
+        event.get("begin_at"),
+        event.get("day"),
+        event.get("timestamp"),
+    ]
+    for candidate in candidates:
+        normalized = normalize_date(candidate)
+        if normalized:
+            return normalized
+    return None
+
+
+def normalize_event_name(event: Dict[str, Any]) -> Optional[str]:
+    for key in ("name", "event", "tournament", "title", "tournament_name"):
+        value = event.get(key)
+        if value:
+            return str(value)
+    return None
+
+
+def list_future_events() -> List[Dict[str, Any]]:
+    payload = fetch_api("", params={"method": "get_events"})
+    events = payload.get("result") or payload.get("events") or payload.get("response") or payload.get("results") or []
+    today = dt.date.today()
+
+    future_events: List[Dict[str, Any]] = []
+    for event in events:
+        start_date = normalize_event_start_date(event)
+        if not start_date:
+            continue
+        try:
+            parsed_date = dt.date.fromisoformat(start_date)
+        except ValueError:
+            continue
+        if parsed_date < today:
+            continue
+
+        event_id = event.get("event_id") or event.get("id") or event.get("tournament_id")
+        name = normalize_event_name(event)
+        location_parts = [event.get("city"), event.get("country"), event.get("location"), event.get("venue")]
+        location = ", ".join(str(part) for part in location_parts if part)
+
+        future_events.append(
+            {
+                "external_id": str(event_id) if event_id else None,
+                "name": name,
+                "category": event.get("category") or event.get("league") or event.get("tour"),
+                "surface": event.get("surface"),
+                "start_date": start_date,
+                "location": location or None,
+                "raw_payload": event,
+            }
+        )
+
+    return future_events
 
 
 def ensure_source(base_url: str) -> str:

@@ -32,6 +32,8 @@ constraints.
 
 Required environment variables:
 
+- `API_TENNIS_KEY`: API key used to authenticate with the API-Tennis service. Defaults to the provided key `db53a535d63fe359cdaa1488d15f3e55e12835c85590c4e3eace0dcc43edb4ab` if not set.
+- `API_TENNIS_BASE_URL` (optional): Base URL for the API-Tennis endpoints. Defaults to `https://api.api-tennis.com/tennis`.
 - `API_TENNIS_KEY`: API key used to authenticate with the API-Tennis service.
 - `API_TENNIS_BASE_URL` (optional): Base URL for the API-Tennis endpoints. Defaults to `https://api-tennis.example.com`.
 - `API_TENNIS_KEY_HEADER` (optional): HTTP header name for the API key. Defaults to `x-api-key`.
@@ -48,3 +50,10 @@ python scripts/ingest_api_tennis.py --print-summary
 
 The `--print-summary` flag outputs a JSON summary of the ingestion run, including
 the source identifier and how many players were ingested.
+
+To fetch and print future tournaments from the API-Tennis `get_events` endpoint
+without touching Supabase, run:
+
+```bash
+python scripts/ingest_api_tennis.py --list-future-tournaments
+```

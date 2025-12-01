@@ -464,6 +464,48 @@ nav a {
     padding: 3rem 0 1rem;
 }
 
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.section-lede {
+    color: var(--text-muted);
+    margin-top: 0.35rem;
+    max-width: 640px;
+}
+
+.section-meta {
+    text-align: right;
+    min-width: 220px;
+}
+
+.eyebrow {
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.75rem;
+    margin: 0 0 0.25rem;
+}
+
+.status {
+    margin: 0;
+    font-weight: 700;
+}
+
+.muted {
+    color: var(--text-muted);
+}
+
+.small {
+    font-size: 0.9rem;
+}
+
 .tournament-section h2 {
     margin-bottom: 2rem;
     font-size: 1.8rem;
@@ -481,6 +523,27 @@ nav a {
     border-radius: 18px;
     padding: 1.75rem;
     box-shadow: var(--shadow);
+}
+
+.card-top {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.badge.surface {
+    border-color: rgba(255, 179, 71, 0.4);
+    color: var(--accent);
 }
 
 .tournament-card h3 {
@@ -506,6 +569,10 @@ nav a {
 @media (max-width: 640px) {
     .page-hero {
         padding-top: 3rem;
+    }
+
+    .section-meta {
+        text-align: left;
     }
 
     .tournament-grid {
