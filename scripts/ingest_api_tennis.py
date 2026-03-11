@@ -13,18 +13,10 @@ import json
 import os
 from typing import Any, Dict, List, Optional
 
-from urllib import error, parse, request
-
-
-API_BASE_URL = os.getenv("API_TENNIS_BASE_URL", "https://api.api-tennis.com/tennis")
-API_KEY = os.getenv(
-    "API_TENNIS_KEY",
-    "db53a535d63fe359cdaa1488d15f3e55e12835c85590c4e3eace0dcc43edb4ab",
-)
 import requests
 
 
-API_BASE_URL = os.getenv("API_TENNIS_BASE_URL", "https://api-tennis.example.com")
+API_BASE_URL = os.getenv("API_TENNIS_BASE_URL", "https://api.api-tennis.com/tennis")
 API_KEY = os.getenv("API_TENNIS_KEY")
 API_KEY_HEADER = os.getenv("API_TENNIS_KEY_HEADER", "x-api-key")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -45,28 +37,13 @@ def require_env(value: Optional[str], name: str) -> str:
 
 def fetch_api(endpoint: str, *, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Call an API-Tennis endpoint and return the JSON payload."""
-
     api_key = require_env(API_KEY, "API_TENNIS_KEY")
-    query = f"?{parse.urlencode(params)}" if params else ""
-    url = f"{API_BASE_URL.rstrip('/')}/{endpoint.lstrip('/')}" + query
-    req = request.Request(url, headers={API_KEY_HEADER: api_key})
-    try:
-        with request.urlopen(req, timeout=30) as resp:
-            payload = resp.read()
-    except error.HTTPError as exc:
-        raise IngestionError(f"API request failed ({exc.code}): {exc.reason}") from exc
-    except error.URLError as exc:
-        raise IngestionError(f"API request failed: {exc.reason}") from exc
-
-    try:
-        return json.loads(payload)
     url = f"{API_BASE_URL.rstrip('/')}/{endpoint.lstrip('/')}"
-    headers = {API_KEY_HEADER: api_key}
-    response = requests.get(url, headers=headers, params=params, timeout=30)
+    response = requests.get(url, headers={API_KEY_HEADER: api_key}, params=params, timeout=30)
     response.raise_for_status()
     try:
         return response.json()
-    except ValueError as exc:  # pragma: no cover - defensive
+    except ValueError as exc:
         raise IngestionError(f"Invalid JSON payload from {url}") from exc
 
 
@@ -79,10 +56,6 @@ def supabase_request(
 ) -> Any:
     supabase_url = require_env(SUPABASE_URL, "SUPABASE_URL")
     supabase_key = require_env(SUPABASE_SERVICE_ROLE_KEY, "SUPABASE_SERVICE_ROLE_KEY")
-
-    base_url = f"{supabase_url.rstrip('/')}/rest/v1/{path}"
-    query = f"?{parse.urlencode(params)}" if params else ""
-    url = base_url + query
     url = f"{supabase_url.rstrip('/')}/rest/v1/{path}"
     headers = {
         "apikey": supabase_key,
@@ -90,20 +63,6 @@ def supabase_request(
         "Content-Type": "application/json",
         "Accept": "application/json",
     }
-    data = json.dumps(json_body).encode("utf-8") if json_body is not None else None
-
-    req = request.Request(url, data=data, headers=headers, method=method)
-    try:
-        with request.urlopen(req, timeout=30) as resp:
-            payload = resp.read()
-            if payload:
-                return json.loads(payload)
-            return None
-    except error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="ignore")
-        raise IngestionError(f"Supabase request failed ({exc.code}): {detail}") from exc
-    except error.URLError as exc:
-        raise IngestionError(f"Supabase request failed: {exc.reason}") from exc
     response = requests.request(method, url, headers=headers, params=params, json=json_body, timeout=30)
     if not response.ok:
         raise IngestionError(f"Supabase request failed ({response.status_code}): {response.text}")
@@ -113,7 +72,7 @@ def supabase_request(
 
 
 def fetch_lookup_table(table: str, key: str) -> Dict[str, Any]:
-    rows = supabase_request("GET", f"{table}", params={"select": "*"})
+    rows = supabase_request("GET", table, params={"select": "*"})
     return {row[key]: row for row in rows}
 
 
@@ -132,9 +91,7 @@ def normalize_country_code(country: Optional[str]) -> Optional[str]:
     if not country:
         return None
     code = country.strip().upper()
-    if len(code) > 3:
-        code = code[:3]
-    return code
+    return code[:3] if len(code) > 3 else code
 
 
 def normalize_date(value: Optional[Any]) -> Optional[str]:
@@ -145,19 +102,15 @@ def normalize_date(value: Optional[Any]) -> Optional[str]:
             return dt.date.fromtimestamp(value).isoformat()
         except (OverflowError, OSError, ValueError):
             return None
-def normalize_date(value: Optional[str]) -> Optional[str]:
-    if not value:
-        return None
     for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y", "%Y-%m-%dT%H:%M:%SZ"):
         try:
-            return dt.datetime.strptime(value, fmt).date().isoformat()
+            return dt.datetime.strptime(str(value), fmt).date().isoformat()
         except ValueError:
             continue
     try:
         return dt.datetime.fromisoformat(str(value)).date().isoformat()
     except ValueError:
         return None
-    return None
 
 
 def normalize_tour_slug(record: Dict[str, Any]) -> Optional[str]:
@@ -173,10 +126,8 @@ def normalize_tour_slug(record: Dict[str, Any]) -> Optional[str]:
 def normalize_surface_slug(surface: Optional[str]) -> Optional[str]:
     if not surface:
         return None
-    surface_slug = surface.lower().strip()
-    if surface_slug in {"hard", "clay", "grass", "carpet"}:
-        return surface_slug
-    return None
+    slug = surface.lower().strip()
+    return slug if slug in {"hard", "clay", "grass", "carpet"} else None
 
 
 def normalize_event_start_date(event: Dict[str, Any]) -> Optional[str]:
@@ -204,6 +155,10 @@ def normalize_event_name(event: Dict[str, Any]) -> Optional[str]:
         if value:
             return str(value)
     return None
+
+
+def _now_utc() -> str:
+    return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
 def list_future_events() -> List[Dict[str, Any]]:
@@ -244,13 +199,11 @@ def list_future_events() -> List[Dict[str, Any]]:
 
 
 def ensure_source(base_url: str) -> str:
-    payload = {
-        "slug": SOURCE_SLUG,
-        "name": SOURCE_NAME,
-        "base_url": base_url,
-        "description": "API-Tennis ingestion feed",
-    }
-    rows = upsert_rows("ingest_sources", [payload], "slug")
+    rows = upsert_rows(
+        "ingest_sources",
+        [{"slug": SOURCE_SLUG, "name": SOURCE_NAME, "base_url": base_url, "description": "API-Tennis ingestion feed"}],
+        "slug",
+    )
     return rows[0]["id"]
 
 
@@ -263,13 +216,11 @@ def ingest_players(source_id: str, tours: Dict[str, Any]) -> Dict[str, int]:
         tour = tours.get(tour_slug) if tour_slug else None
         if not tour:
             continue
-        external_id = str(player.get("id") or player.get("player_id"))
+        external_id = str(player.get("id") or player.get("player_id") or "")
         if not external_id:
             continue
         country = player.get("country") or {}
         country_code = normalize_country_code(country.get("code") if isinstance(country, dict) else country)
-        handedness = player.get("hand") or player.get("handedness")
-        birthdate = normalize_date(player.get("birthday") or player.get("birthdate"))
         full_name = player.get("full_name") or " ".join(
             part for part in [player.get("firstname"), player.get("lastname")] if part
         ).strip()
@@ -283,10 +234,10 @@ def ingest_players(source_id: str, tours: Dict[str, Any]) -> Dict[str, int]:
                 "tour_id": tour["id"],
                 "full_name": full_name,
                 "country_code": country_code,
-                "handedness": handedness,
-                "birthdate": birthdate,
+                "handedness": player.get("hand") or player.get("handedness"),
+                "birthdate": normalize_date(player.get("birthday") or player.get("birthdate")),
                 "raw_payload": player,
-                "updated_at": dt.datetime.utcnow().isoformat(),
+                "updated_at": _now_utc(),
             }
         )
 
@@ -303,7 +254,7 @@ def ingest_tournaments(source_id: str, tours: Dict[str, Any], surfaces: Dict[str
         tour = tours.get(tour_slug) if tour_slug else None
         if not tour:
             continue
-        external_id = str(tournament.get("id") or tournament.get("tournament_id"))
+        external_id = str(tournament.get("id") or tournament.get("tournament_id") or "")
         if not external_id:
             continue
         surface_slug = normalize_surface_slug(
@@ -334,24 +285,21 @@ def ingest_tournaments(source_id: str, tours: Dict[str, Any], surfaces: Dict[str
                 "start_date": normalize_date(tournament.get("start_date") or tournament.get("start")),
                 "end_date": normalize_date(tournament.get("end_date") or tournament.get("end")),
                 "raw_payload": tournament,
-                "updated_at": dt.datetime.utcnow().isoformat(),
+                "updated_at": _now_utc(),
             }
         )
 
     upsert_rows("ingest_tournaments", normalized, "source_id,external_id")
 
 
-def ingest_rankings(
-    tours: Dict[str, Any],
-    player_lookup: Dict[str, int],
-) -> None:
+def ingest_rankings(tours: Dict[str, Any], player_lookup: Dict[str, int]) -> None:
     payload = fetch_api("rankings")
     rankings = payload.get("rankings") or payload.get("response") or []
     normalized: List[Dict[str, Any]] = []
     for row in rankings:
         ranking_info = row.get("ranking") or row
         player_ref = ranking_info.get("player") or row.get("player") or {}
-        external_id = str(player_ref.get("id") or player_ref.get("player_id") or row.get("player_id"))
+        external_id = str(player_ref.get("id") or player_ref.get("player_id") or row.get("player_id") or "")
         if not external_id:
             continue
         player_id = player_lookup.get(external_id)
@@ -360,6 +308,9 @@ def ingest_rankings(
         tour_slug = normalize_tour_slug(ranking_info) or normalize_tour_slug(player_ref)
         tour = tours.get(tour_slug) if tour_slug else None
         if not tour:
+            continue
+        rank_raw = ranking_info.get("rank")
+        if rank_raw is None:
             continue
         ranking_date = normalize_date(ranking_info.get("date") or ranking_info.get("ranking_date"))
         if not ranking_date:
@@ -370,10 +321,10 @@ def ingest_rankings(
                 "player_id": player_id,
                 "tour_id": tour["id"],
                 "ranking_date": ranking_date,
-                "rank": int(ranking_info.get("rank")),
-                "points": int(ranking_info.get("points", 0)),
+                "rank": int(rank_raw),
+                "points": int(ranking_info.get("points") or 0),
                 "raw_payload": row,
-                "created_at": dt.datetime.utcnow().isoformat(),
+                "created_at": _now_utc(),
             }
         )
 
@@ -381,19 +332,13 @@ def ingest_rankings(
 
 
 def run_ingestion() -> Dict[str, Any]:
-    base_url = require_env(API_BASE_URL, "API_TENNIS_BASE_URL")
-    source_id = ensure_source(base_url)
+    source_id = ensure_source(require_env(API_BASE_URL, "API_TENNIS_BASE_URL"))
     tours = fetch_lookup_table("tours", "slug")
     surfaces = fetch_lookup_table("surfaces", "slug")
-
     player_lookup = ingest_players(source_id, tours)
     ingest_tournaments(source_id, tours, surfaces)
     ingest_rankings(tours, player_lookup)
-
-    return {
-        "source_id": source_id,
-        "players_ingested": len(player_lookup),
-    }
+    return {"source_id": source_id, "players_ingested": len(player_lookup)}
 
 
 def main() -> None:
@@ -410,8 +355,6 @@ def main() -> None:
         events = list_future_events()
         print(json.dumps(events, indent=2))
         return
-
-    args = parser.parse_args()
 
     summary = run_ingestion()
     if args.print_summary:
